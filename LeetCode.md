@@ -1,3 +1,44 @@
+### 二分模板
+
+```java
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+        if(nums.length == 0) return new int[]{-1,-1};
+        return new int[]{leftRange(nums, target), rightRange(nums, target)};
+    }
+    
+    //查找左边界
+    private int leftRange(int[] nums, int target){
+        int l = 0, r = nums.length - 1;
+        while(l <= r){
+            int mid = l + ((r - l) >>> 1);
+            if(nums[mid] == target) r = mid - 1;
+            else if(nums[mid] < target) l = mid + 1;
+            else if(nums[mid] > target) r = mid - 1;
+        }
+        if(l >= nums.length || nums[l] != target) return -1;
+        return l;
+    }
+    
+    //查找右边界
+    private int rightRange(int[] nums, int target){
+        int l = 0, r = nums.length - 1;
+        while(l <= r){
+            int mid = l + ((r - l) >>> 1);
+            if(nums[mid] == target) l = mid + 1;
+            else if(nums[mid] < target) l = mid + 1;
+            else if(nums[mid] > target) r = mid-1;
+        }
+        if(r < 0 || nums[r] != target) return -1;
+        return r;
+    }
+}
+```
+
+
+
+
+
 ### No.21 合并两个有序链表
 
 ```java
