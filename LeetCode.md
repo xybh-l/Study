@@ -47,6 +47,71 @@ class Solution {
 }
 ```
 
+### No.56 合并区间
+
+```java
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        //根据区间的左端点排序
+        Arrays.sort(intervals, (a, b) -> a[0]-b[0]);
+        
+        int i = 0;
+        List<int[]> list = new ArrayList<>();
+        
+        while(i < intervals.length){
+            int left = intervals[i][0], right = intervals[i][1];
+            //当右端点大于等于后一个元素的左端点时
+            while(i < intervals.length - 1 && right >= intervals[i+1][0]){
+                i++;
+                //判断是当前区间右端点更大还是下一个区间右端点更大
+                right = Math.max(right, intervals[i][1]);
+            }
+            //合并完成
+            list.add(new int[]{left, right});
+            i++;
+        }
+        return list.toArray(new int[0][]);
+    }
+}
+```
+
+
+
+### No.124 二叉树的路径和
+
+递归
+
+```java
+class Solution {
+    int maxSum = Integer.MIN_VALUE;
+    
+    public int maxPathSum(TreeNode root) {
+        dfs(root); 
+        
+        return maxSum;
+    }
+    
+    private int dfs(TreeNode root){
+        if(root == null) return 0;
+        
+        int left = Math.max(dfs(root.left), 0);
+        int right = Math.max(dfs(root.right), 0);
+        
+        // 节点的最大路径和取决于该节点的值与该节点的左右子节点的最大贡献值
+        int priceNewpath = root.val + left + right;
+
+        // 更新答案
+        maxSum = Math.max(maxSum, priceNewpath);
+
+        // 返回节点的最大贡献值
+        
+        return root.val + Math.max(left, right);
+    }
+}
+```
+
+
+
 ### No.206 反转链表
 
 头插法
@@ -89,7 +154,7 @@ class Solution {
 }
 ```
 
-No.215 数组中的第K大数
+### No.215 数组中的第K大数
 
 优先队列
 
