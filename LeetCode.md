@@ -35,8 +35,6 @@ class Solution {
 }
 ```
 
-
-
 ### No.5 最长回文子串
 
 ```java
@@ -78,8 +76,6 @@ class Solution {
     }
 }
 ```
-
-
 
 ### No.21 合并两个有序链表
 
@@ -130,6 +126,42 @@ class Solution {
 }
 ```
 
+### No.54 螺旋矩阵
+
+模拟
+
+```java
+class Solution {
+    public List<Integer> spiralOrder(int[][] matrix) {
+        ArrayList<Integer> res = new ArrayList<>();
+        if(matrix.length == 0 || matrix[0].length == 0) return res;
+
+        int m = matrix.length;
+        int n = matrix[0].length;
+        boolean[][] vis = new boolean[m][n];
+        int [][]dir = new int[][]{{0,1},{1,0},{0,-1},{-1,0}};
+        int x = 0, y = 0;
+        int down = m, top = 0, left = 0, right = n;
+        int nx = 0, ny = 0, d = 0;
+        
+        for(int i = 1; i <= m*n; i++){
+            vis[x][y] = true;
+            res.add(matrix[x][y]);
+            nx = x + dir[d%4][0];
+            ny = y + dir[d%4][1];
+            if(nx >= down || nx < top || ny >= right || ny < left || vis[nx][ny]){
+                d++;
+                nx = x + dir[d%4][0];
+                ny = y + dir[d%4][1];
+            }
+            x = nx;
+            y = ny;
+        }
+        return res;
+    }
+}
+```
+
 ### No.56 合并区间
 
 ```java
@@ -157,8 +189,6 @@ class Solution {
     }
 }
 ```
-
-
 
 ### No.124 二叉树的路径和
 
@@ -192,8 +222,6 @@ class Solution {
     }
 }
 ```
-
-
 
 ### No.146 LRU缓存机制
 
@@ -270,8 +298,6 @@ class LRUCache {
  * obj.put(key,value);
  */
 ```
-
-
 
 ### No.206 反转链表
 
