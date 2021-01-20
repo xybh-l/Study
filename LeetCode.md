@@ -299,6 +299,37 @@ class LRUCache {
  */
 ```
 
+No.199 树的右视图
+
+```java
+class Solution {
+    public List<Integer> rightSideView(TreeNode root) {
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+        ArrayList<Integer> ans = new ArrayList<Integer>();
+        
+        if(root == null) return ans;
+        
+        while(!q.isEmpty()){
+            int size = q.size();
+            
+            for(int i = 0; i < size; i++){
+                TreeNode temp = q.poll();
+                if(temp.left != null) q.offer(temp.left);
+                if(temp.right != null) q.offer(temp.right);
+
+                if(i == size-1){
+                    ans.add(temp.val);
+                }
+            }
+            
+        }
+        
+        return ans;
+    }
+}
+```
+
 ### No.206 反转链表
 
 头插法
