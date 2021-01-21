@@ -69,7 +69,9 @@ NESTED：如果当前有事务则开启子事务（嵌套事务），嵌套事�
 
 4.Twitter的SnowFlake和美团  的Leaf
 
-## JSONResult.java
+## 6. Restful结果类
+
+### JSONResult.java
 
 ```java
 package com.xybh.utils;
@@ -215,7 +217,62 @@ public class JSONResult {
 
 ```
 
+## 7. Swagger2配置类
 
+```java
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig {
+    // swagger2访问地址: 主机名:端口号/swagger-ui.html
+    //  bootstrap页面: 主机名:端口号/doc.html
 
+    /**
+     * 配置swagger2核心内容 docket
+     * @return
+     */
+    @Bean
+    public Docket createRestApi() {
+                    //指定api类型为SWAGGER2
+        return new Docket(DocumentationType.SWAGGER_2)
+                // 用于定义api文档的汇总信息
+                .apiInfo(apiInfo())
+                // 指定Controller的包名
+                .select()
+                .apis(RequestHandlerSelectors
+                       .basePackage("com.xybh.controller"))
+                //包名底下所有controller
+                .paths(PathSelectors.any())
+                .build();
+    }
 
+    private ApiInfo apiInfo() {
+        return new ApiInfoBuilder()
+                // 文档页标题
+                .title("吃货商城后端API文档")
+                // 文档描述
+                .description("专为吃货商城编写的后端API文档")
+                // 联系人
+                .contact(new Contact("xybh", null, null))
+                // 版本信息
+                .version("v0.0.1")
+                // 项目URL
+                .termsOfServiceUrl("127.0.0.1")
+                .build();
+    }
+}
+```
 
+## 8. Cookie与Session
+
+### Cookie
+
+- 以键值对的形式存储信息在服务器
+- cookie不能跨域，当前及其父级域名可以取值
+- cookie可以设置有效期
+- cookie可以设置path
+
+### Session
+
+- 基于服务器内存的缓存(非持久化)，可保存请求会话
+- 每个session通过sessionid来区别不同请求
+- session可设置过期时间
