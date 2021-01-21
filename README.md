@@ -95,7 +95,15 @@
 
 5. java 安全的停止一个线程
 
-   stop()
+   ```java
+   Thread.interrupt(); 	//中断线程
+   Thread.isInterrupted();	//判断是否中断
+   Thread.interrupted();	//判断是否中断,并且清除当前中断状态
+   ```
+
+   
+
+   
 
    
 
