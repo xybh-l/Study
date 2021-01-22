@@ -217,7 +217,9 @@ public class JSONResult {
 
 ```
 
-## 7. Swagger2配置类
+## 7. 配置文件
+
+### 1. Swagger2配置类
 
 ```java
 @Configuration
@@ -262,6 +264,35 @@ public class SwaggerConfig {
 }
 ```
 
+### 2. log4j日志配置文件
+
+```java
+log4j.rootLogger=DEBUG,stdout,file
+log4j.additivity.org.apache=true
+
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.threshold=INFO
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%-5p %c{1}:%L - %m%n
+
+# 每天保存日志文件
+log4j.appender.file=org.apache.log4j.DailyRollingFileAppender
+# 输出布局
+log4j.appender.file.layout=org.apache.log4j.PatternLayout
+# 文件日期参数
+log4j.appender.file.DatePattern='.'yyyy-MM-dd-HH-mm
+# 输出格式
+log4j.appender.file.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+# 输出信息级别(INFO)
+log4j.appender.file.Threshold=INFO
+# 追加输出
+log4j.appender.file.append=true
+# 文件保存地址
+log4j.appender.file.File=/workspaces/logs/foodie-api/imooc.log
+```
+
+
+
 ## 8. Cookie与Session
 
 ### Cookie
@@ -276,3 +307,41 @@ public class SwaggerConfig {
 - 基于服务器内存的缓存(非持久化)，可保存请求会话
 - 每个session通过sessionid来区别不同请求
 - session可设置过期时间
+
+## AOP通知:
+
+1. 前置通知: 在方法调用之前仔细
+2. 后置通知: 在方法正常调用之后执行
+3. 环绕通知: 在方法调用之前和之后,都分别可以执行的通知
+4. 异常通知: 如果在憨憨调用过程中发生异常,则通知
+5. 最终通知: 在方法调用之后执行
+
+```
+切面表达式:
+* execution 代表所要执行的表达式主体
+* 第一处 * 表示方法返回类型
+* 第二次 包名表示aop监控的包名
+* 第三处 .. 代表该包以及子包下的所有类方法
+* 第四次 *  代表所有类
+* 第五处 *(..) *代表方法 (..)代表参数
+execution(* com.xybh.service.impl..*.*(..) )
+```
+
+分页插件 PageHelper
+
+```xml
+<!-- pageHelper分页插件 -->
+<dependency>
+    <groupId>com.github.pagehelper</groupId>
+    <artifactId>pagehelper-spring-boot-starter</artifactId>
+    <version>1.3.0</version>
+</dependency>
+```
+
+```yml
+# 分页插件配置
+pagehelper:
+  helper-dialect: mysql #数据库方言
+  support-methods-arguments: true	#是否支持分页的参数传参
+```
+
