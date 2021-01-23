@@ -427,3 +427,54 @@ pagehelper:
   support-methods-arguments: true	#是否支持分页的参数传参
 ```
 
+##  11. MyBaits SQL编写
+
+```xml &lt;choose&gt;
+<!-- 多条件判断 -->
+<!-- ''需要转义(&quot) -->
+<choose>
+            <when test="paramsMap.sort == &quot;c&quot;">
+                i.sell_counts desc
+            </when>
+            <when test="paramsMap.sort ==  &quot;p &quot;">
+                tempSpec.price_discount asc
+            </when>
+            <otherwise>i.item_name asc</otherwise>
+        </choose>
+/*
+k: 默认, 代表默认排序,根据name
+c: 根据销量排序
+p: 根据价格排序
+*/
+```
+
+## 12.购物车存储信息
+
+### Cookie
+
+- 无须登录、无须查库、保存在浏览器端
+- 优点：性能好、访问快，没有和数据库交互
+- 缺点1：换电脑购物车数据会丢失
+- 缺点2：电脑被其他人登录、隐私安全
+
+### Session
+
+- 用户登录后，购物车数据放入用户会话
+- 优点：初期性能较好，访问快
+- 缺点1：session基于内存，用户量庞大影响服务器性能
+- 缺点2：只能存在于当前会话，不适用集群与分布式系统
+
+### 数据库
+
+- 用户登录后，购物车数据存入数据库
+- 优点：数据持久化，可在任何地点任何时间访问
+- 缺点：频繁读写数据库，造成数据库压力
+
+### Redis
+
+- 用户登录后，购物车数据存入Redis
+- 优点1：数据持久化，可在任何地点任何时间访问
+- 优点2：频繁读写只基于缓存，不会造成数据库压力
+- 优点3：适用于集群与分布式系统，可扩展性强
+
+**未登录使用Cookie，已登录使用Redis**
