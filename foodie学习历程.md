@@ -537,4 +537,59 @@ pagehelper:
 </update>
 ```
 
-14.发送Restful请求
+## 14.发送Restful请求
+
+```java
+@Configuration
+public class WebMvcConfig {
+
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder){
+        return builder.build();
+    }
+}
+
+@AutoWired
+private RestTemplate restTemplate;
+
+HttpHeaders header = new HttpHeaders();
+        header.setContentType(MediaType.APPLICATION_JSON);
+        header.add("userId", "imooc");
+        header.add("password", "imooc");
+
+HttpEntity<MerchantOrdersVO> entity = new HttpEntity<>(merchantOrdersVO, header);
+
+ResponseEntity<JSONResult> responseEntity =
+                restTemplate.postForEntity(PAYMENT_URL,
+                        entity,
+                        JSONResult.class);
+JSONResult paymentResult = responseEntity.getBody();
+```
+
+
+
+## 15.定时任务
+
+```java
+/**
+ * 使用定时任务关闭超时未支付订单,会存在弊端:
+ * 1. 会有时间差，程序不严谨
+ *      10:39下单, 11:00不足1小时, 12:00检查, 超过1小时多39分钟
+ * 2. 不支持集群
+ *      单机没问题,使用集群后会有多个定时任务
+ *      解决方案: 只使用一台计算机节点,单独用来运行所有的定时任务
+ * 3. 会对数据库全表搜索，及其影响数据库性能
+ *      select * from order where orderStatus = 10;
+ * 定时任务,仅仅适用于小型轻量级项目,传统项目
+ * 
+ * 消息队列:MQ -> RabbitMQ, RocketMQ, Kafka, ZeroMQ...
+ */
+@Scheduled(cron = "0 0 0/1 * * ? *")
+    public void autoCloseOrder() {
+        orderService.closeOrder();
+        System.out.println("执行定时任务,当前时间为:"+ DateUtil.getCurrentDateString(DateUtil.DATETIME_PATTERN));
+}
+// 启动类上加上 @EnableScheduling
+// corn表达式生成网站: https://qqe2.com/cron
+```
+
