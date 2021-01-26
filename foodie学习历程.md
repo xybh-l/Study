@@ -299,6 +299,31 @@ public class DesensitizationUtil {
 }
 ```
 
+### ③手机号/邮箱校验工具类
+
+```java
+public class MobileEmailUtils {
+
+    public static boolean checkMobileIsOk(String mobile) {
+        String regex = "^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(17[013678])|(18[0,5-9]))\\d{8}$";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(mobile);
+        boolean isMatch = m.matches();
+        return isMatch;
+    }
+
+    public static boolean checkEmailIsOk(String email) {
+        boolean isMatch = true;
+        if (!email.matches("[\\w\\.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+")) {
+            isMatch = false;
+        }
+        return isMatch;
+    }
+}
+```
+
+
+
 ## 7. 配置文件
 
 ### 1. Swagger2配置类
@@ -348,7 +373,7 @@ public class SwaggerConfig {
 
 ### 2. log4j日志配置文件
 
-```java
+```yml
 log4j.rootLogger=DEBUG,stdout,file
 log4j.additivity.org.apache=true
 
@@ -433,19 +458,33 @@ pagehelper:
 <!-- 多条件判断 -->
 <!-- ''需要转义(&quot) -->
 <choose>
-            <when test="paramsMap.sort == &quot;c&quot;">
-                i.sell_counts desc
-            </when>
-            <when test="paramsMap.sort ==  &quot;p &quot;">
-                tempSpec.price_discount asc
-            </when>
-            <otherwise>i.item_name asc</otherwise>
-        </choose>
-/*
-k: 默认, 代表默认排序,根据name
-c: 根据销量排序
-p: 根据价格排序
-*/
+    <when test="paramsMap.sort == &quot;c&quot;">
+        i.sell_counts desc
+    </when>
+    <when test="paramsMap.sort ==  &quot;p &quot;">
+        tempSpec.price_discount asc
+    </when>
+    <otherwise>i.item_name asc</otherwise>
+</choose>
+<!--
+    k: 默认, 代表默认排序,根据name
+    c: 根据销量排序
+    p: 根据价格排序
+-->
+
+<!-- 遍历List -->
+<foreach collection="paramsList" index="0" item="specId" open="(" separator="," close=")" >
+            #{specId}
+</foreach>
+
+<!-- 
+	collection 	List名称
+	index		起始下标
+	item		遍历变量名称
+	open		左侧符号,(
+	close		右侧符号,)
+	separator	分隔符,,
+-->
 ```
 
 ## 12.购物车存储信息
@@ -478,3 +517,24 @@ p: 根据价格排序
 - 优点3：适用于集群与分布式系统，可扩展性强
 
 **未登录使用Cookie，已登录使用Redis**
+
+## 13.防止超卖
+
+- synchronized:不推荐使用,集群下无用,性能低下
+- 锁数据库:不推荐,导致数据库性能低下
+- 分布式锁:zookeeper redis
+
+单体: 乐观锁
+
+```xml
+<update id="decreaseItemSpecStock">
+        UPDATE
+            items_spec
+        SET stock = stock - #{pendingCounts}
+        WHERE id = #{specId}
+          AND stock >= #{pendingCounts}
+        #判断当前库存大于需要扣除的数量
+</update>
+```
+
+14.发送Restful请求
