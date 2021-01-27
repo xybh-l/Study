@@ -662,3 +662,25 @@ JSONResult paymentResult = responseEntity.getBody();
     }
 ```
 
+## 17.静态资源映射
+
+```java
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    /**
+     *  实现静态资源的映射
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/**")
+                // 映射swagger2
+                .addResourceLocations("classpath:/META-INF/resources/")
+                // 映射本地静态资源
+                .addResourceLocations("file:E:/Tomcat/apache-tomcat-9.0.37/webapps/foodie-center/");
+    }
+}
+```
+
+
+
