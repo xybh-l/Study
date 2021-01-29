@@ -2,7 +2,7 @@
 
 
 
-# foodie学习记录
+# foodie单体学习记录
 
 ## 1. 为什么不使用数据库外键?
 
@@ -606,7 +606,8 @@ JSONResult paymentResult = responseEntity.getBody();
             HttpServletRequest request, HttpServletResponse response) {
 
         // 定义头像保存的地址
-        String fileSpace = IMAGE_USER_FACE_URL;
+//        String fileSpace = IMAGE_USER_FACE_URL;
+        String fileSpace = fileUpload.getImageUserFaceLocation();
         // 在路径上为每个用户增加一个userId, 用于区分不同用户上传
         String uploadPathPrefix = File.separator + userId;
 
@@ -621,12 +622,19 @@ JSONResult paymentResult = responseEntity.getBody();
                 // 获取文件的后缀名
                 String suffix = fileNameArray[fileNameArray.length - 1];
 
+                if(!"png".equalsIgnoreCase(suffix) && !"jpg".equalsIgnoreCase(suffix) && !"jpeg".equalsIgnoreCase(suffix)){
+                    return JSONResult.errorMsg("图片格式不正确");
+                }
+
                 // face-{userid}.png
                 // 文件名重组  覆盖式上传, 增量式: 额外拼接当前时间
                 String newFileName = "face-" + userId + "-" + DateUtil.format(new Date(), "yyyyMMddHHmmss") + "." + suffix;
 
                 // 文件上传的最终保存位置
-                String finalFacePath = fileSpace + File.separator + uploadPathPrefix + File.separator + newFileName;
+                String finalFacePath = fileSpace + uploadPathPrefix + File.separator + newFileName;
+
+                // 用于提供给web服务访问的地址
+                uploadPathPrefix += ("/" + newFileName);
                 FileOutputStream fileOutputStream = null;
                 InputStream inputStream = null;
                 try {
@@ -657,10 +665,32 @@ JSONResult paymentResult = responseEntity.getBody();
         } else {
             return JSONResult.errorMsg("文件不能为空!");
         }
+
+        // 获取图片服务地址
+        String imageServerUrl = fileUpload.getImageServerUrl();
+
+        // 由于游览器可能存在缓存的情况,图片可以加上时间戳来及时更新图片
+        String finalUserFaceUrl = imageServerUrl + uploadPathPrefix;
+        // 更新用户头像到数据库
+        Users user = centerUserService.updateUserFace(userId, finalUserFaceUrl);
+        setNullProperty(user);
+        CookieUtils.setCookie(request, response, "user", JSON.toJSONString(user), true);
         // TODO 后续要改,增加令牌token,整合进redis,分布式会话
         return JSONResult.ok();
-    }
+}
 ```
+
+```yml
+spring:  
+  servlet:
+    multipart:
+      # 文件上传大小限制为500Kb
+      max-file-size: 512000
+      # 请求大小限制为500Kb
+      max-request-size: 512000
+```
+
+
 
 ## 17.静态资源映射
 
@@ -681,6 +711,49 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 }
 ```
+
+## 18.部署到tomcat
+
+/config/server.xml
+
+修改三个端口号
+
+firewall-cmd --zone=public --add-port=8080/tcp --permanent //打开防火墙
+
+## 19.多环境配置
+
+profiles 多环境配置梳理:
+
+1. 数据源配置
+    1.1 url根据自身情况去修改为localhost或者内网IP(集群或者分布式系统,一定要使用内网IP)
+
+  1.2 密码 root 改为自己的密码
+
+2. mybatis 日志打印
+
+   dev 可以打印
+
+   test 可以打印
+
+   prod 没必要打印
+
+3. 图片保存目录和图片服务请求路径设置
+
+4. 从支付中心的回调地址
+
+   http://api.z.xybh.online:8088/food-dev-api/orders/notifyMerchantOrderPaid
+
+打包方式:
+
+1. jar
+
+   服务化的概念,SpringCloud以jar的形式存在
+
+2. war
+
+   应用程序的概念,也可以向外提供服务和接口
+
+
 
 
 
