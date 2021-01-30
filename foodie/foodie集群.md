@@ -217,7 +217,23 @@ if ($invalid_referer) {
 }
 ```
 
+### 9、Nginx 集群
 
+```python
+upstream www.tomcats.com{
+    server 192.168.1.173:8080;
+	server 192.168.1.174:8080;
+	server 192.168.1.175:8080;   
+}
+server{
+    listen 	80;
+    server_name www.tomcats.com;
+    	
+    location /{
+        proxy_pass http://tomcats;
+    }
+}
+```
 
 
 
