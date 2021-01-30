@@ -91,9 +91,9 @@
 - 帮助文档             nginx -?
 - 设置配置文件     nginx -c filename
 
-## 五、Nginx 日志
+### 4、Nginx 日志
 
-### 1. Nginx 日志切割(手动)
+#### 1. Nginx 日志切割(手动)
 
 cut_my_log.sh
 
@@ -110,7 +110,7 @@ kill -USR1 `cat $PID`
 
 
 
-### 2. Nginx 日志切割(自动)
+#### 2. Nginx 日志切割(自动)
 
 1. 安装定时任务
 
@@ -168,7 +168,7 @@ crontab	-l					//查看任务列表
   ```
 
 
-## 六、Nginx静态资源映射
+### 5、Nginx静态资源映射
 
 ```
 server{
@@ -186,14 +186,14 @@ server{
 }
 ```
 
-## 七、Nginx gzip压缩
+### 6、Nginx gzip压缩
 
 - gzip on;  					 # 开启gzip压缩，目的：提高压缩效率，节约带宽
 - gzip_min_length 1;	# 限制最小压缩，小于1字节文件不会压缩
 - gzip_comp_level 3;	# 定义压缩的级别 (压缩比，文件越大，压缩越多，但是cpu使用会越多)
 - gzip_type					 # 定义压缩文件的类型
 
-## 八、Nginx 跨域配置
+### 7、Nginx 跨域配置
 
 ```python
 # 允许跨域请求的域, *代表所有
@@ -204,6 +204,17 @@ add_header 'Access-Control-Allow-Credentials' 'true';
 add_header 'Access-Control-Allow-Methods' *;
 # 允许请求的header
 add_header 'Access-Control-Allow-Headers' *;
+```
+
+### 8、Nginx 防盗链
+
+```python
+# 对源站点验证
+valid_referers *.imooc.com;
+# 非法引入会进入下方判断
+if ($invalid_referer) {
+    return 404;
+}
 ```
 
 
