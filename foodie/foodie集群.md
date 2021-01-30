@@ -29,3 +29,200 @@
 ### 2. 什么是反向代理
 
 - 用户请求目标服务器，由目标服务器决定访问哪个ip
+
+## 四、Nginx
+
+### 1. Nginx的进程模型
+
+- master进程:主进程
+
+- worker进程:工作进程
+
+  信号:
+
+  nginx -s stop
+
+  nginx -s quit
+
+  nginx -s reload
+
+  nginx -t
+
+### 2.配置文件参数
+
+#### main
+
+- user : 工作进程所属用户
+- worker_processes:工作进程数量，通常为n-1
+- error_log: 保存日志 命令格式 error_log 日志文件名 (debug info notice warn error crit)
+- pid: Nginx 启动进程号
+
+#### events
+
+- use epoll; 默认使用epoll, worker进程工作模式
+- worker_connections 10240; 每个worker允许连接的客户端最大连接数
+
+#### http
+
+- include				 	导入外部文件
+- default_type 	   	文档默认类型
+- log_format 		  	日志格式
+- access_log				日志文件保存位置
+- sendfile 					发送文件
+- keeplive_timeout	保持连接
+- gzip							gzip压缩
+
+#### server
+
+- listen 						监听端口
+- server_name			域名
+- location					路由
+- error_page				错误状态(跳转页面)
+
+### 3. Nginx常用命令
+
+- 启动 				    nginx
+- 快速停止 	        nginx -s stop
+- 停止服务器         nginx -s quit
+- 重载 		            nginx -s reload
+- 测试配置文件     nginx -t
+- 查看版本             nginx -v	
+- 查看详情             nginx -V
+- 帮助文档             nginx -?
+- 设置配置文件     nginx -c filename
+
+## 五、Nginx 日志
+
+### 1. Nginx 日志切割(手动)
+
+cut_my_log.sh
+
+```bash
+#!/bin/bash
+LOG_PATH="/www/server/nginx/logs"
+RECORD_TIME=$(date -d "yesterday" +%Y-%m-%d+%H:%M)
+PID=/www/server/nginx/logs/nginx.pid
+mv ${LOG_PATH}/access.log ${LOG_PATH}/access.${RECORD_TIME}.log
+mv ${LOG_PATH}/error.log ${LOG_PATH}/error.${RECORD_TIME}.log
+#向Nginx主进程发送信号，用于重新打开日志文件
+kill -USR1 `cat $PID`
+```
+
+
+
+### 2. Nginx 日志切割(自动)
+
+1. 安装定时任务
+
+   ```shell
+   yum install crontabs
+   ```
+
+2. corntal -e 编辑并且添加一行新的任务
+
+   ```bash
+   */1 * * * * /www/server/nginx/sbin/cut_my_log.sh
+   ```
+
+3. 重启定时任务
+
+   ```shell
+   service crond restart
+   ```
+
+附:**常见定时任务命令**
+
+```shell
+service crond start			//启动服务
+service crond stop			//关闭服务
+service crond restart		//重启服务
+service crond reload		//重载配置
+crontab -e					//编辑任务
+crontab	-l					//查看任务列表
+```
+
+**定时任务表达式**
+
+|          |  分  |  时  |  日  |  月  | 星期几 |      年(可选)      |
+| :------: | :--: | :--: | :--: | :--: | :----: | :----------------: |
+| 取值范围 | 0-59 | 0-23 | 1-31 | 1-12 |  1-7   | 2019/2020/2021/... |
+
+   **常见表达式**
+
+- 每分钟执行:
+
+  ```bash
+  */1 * * * *
+  ```
+
+- 每日凌晨（每天晚上23:59）执行:
+
+  ```bash
+  59 23 * * *
+  ```
+
+- 每日凌晨1点执行:
+
+  ```bash
+  0 1 * * *
+  ```
+
+
+## 六、Nginx静态资源映射
+
+```
+server{
+	listen			90;
+	server_name		localhost;
+	
+	location / {
+		root   /home/foodie-shop;
+		index   index.html;
+	}
+	
+	location /static {
+		alias  /home/imooc;	
+	}
+}
+```
+
+## 七、Nginx gzip压缩
+
+- gzip on;  					 # 开启gzip压缩，目的：提高压缩效率，节约带宽
+- gzip_min_length 1;	# 限制最小压缩，小于1字节文件不会压缩
+- gzip_comp_level 3;	# 定义压缩的级别 (压缩比，文件越大，压缩越多，但是cpu使用会越多)
+- gzip_type					 # 定义压缩文件的类型
+
+## 八、Nginx 跨域配置
+
+```python
+# 允许跨域请求的域, *代表所有
+add_header	'Access-Control-Allow-Origin' *;
+# 允许带上cookie请求
+add_header 'Access-Control-Allow-Credentials' 'true';
+# 允许请求的方法, 比如 GET/POST/PUT/DELETE
+add_header 'Access-Control-Allow-Methods' *;
+# 允许请求的header
+add_header 'Access-Control-Allow-Headers' *;
+```
+
+
+
+
+
+
+
+​	
+
+​	 	
+
+
+
+
+
+
+
+
+
+
+

@@ -1,6 +1,6 @@
-[TOC]
 
 
+<!-- toc -->
 
 # foodie单体学习记录
 
@@ -454,7 +454,7 @@ pagehelper:
 
 ##  11. MyBaits SQL编写
 
-```xml &lt;choose&gt;
+```xml
 <!-- 多条件判断 -->
 <!-- ''需要转义(&quot) -->
 <choose>

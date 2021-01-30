@@ -1,0 +1,13 @@
+{
+    "title": "foodie学习资料",
+    "description:": "记录foodie项目中的知识点",
+    "author": "xybh",
+    "plugins":[
+        "-search",
+        "back-to-top-button",
+        "chapter-fold",
+        "-lunr",
+        "search-pro",
+        "toc"
+    ]
+}
