@@ -220,8 +220,8 @@ if ($invalid_referer) {
 ### 9、Nginx 集群
 
 ```python
-upstream www.tomcats.com{
-    server 192.168.1.173:8080;
+upstream tomcats{
+    server 192.168.1.173:8080;  # weight 权重设置 example: weight=1
 	server 192.168.1.174:8080;
 	server 192.168.1.175:8080;   
 }
@@ -235,7 +235,73 @@ server{
 }
 ```
 
+### 10、配置SSL证书
 
+1. 安装SSL模块
+
+   要在nginx中配置https，就要先安装ssl模块，即`http_ssl_module`.
+
+   - 进入nginx安装目录
+
+   - 新增ssl模块
+
+     ```bash
+     ./configure \
+     --prefix=/usr/local/nginx \
+     --pid-path=/var/run/nginx/nginx.pid \
+     --lock-path=/var/lock/nginx.lock \
+     --error-log-path=/var/log/nginx/error.log \
+     --http-log-path=/var/log/nginx/access.log \
+     --with-http_gzip_static_module \
+     --http-client-body-temp-path=/var/temp/nginx/client \
+     --http-proxy-temp-path=/var/temp/nginx/proxy \
+     --http-fastcgi-temp-path=/var/temp/nginx/fastcgi \
+     --http-uwsgi-temp-path=/var/temp/nginx/uwsgi \
+     --http-scgi-temp-path=/var/temp/nginx/scgi \
+     --with-http_ssl_module
+     ```
+
+   - 编译和安装
+
+     ```bash
+     make
+     make install
+     ```
+
+2. 配置HTTPS
+
+   - 把ssl证书`*.crt`和`*.key`拷贝到`nginx.conf`同级目录中
+
+   - 新增server监听443端口:
+
+     ```bash
+     server {
+         listen 443;
+         # DNS解析的域名
+         server_name www.imoocdsp.com;
+         # 开启ssl
+         ssl on;
+         # 配置ssl证书(修改为自己的crt)
+         ssl_certificate *.xybh.crt;
+         # 配置证书秘钥(修改为自己的key)
+         ssl_certificate_key *.xybh.key;
+         # ssl会话cache
+         ssl_session_cache shared:SSL:1m;
+         # ssl会话超时时间
+         ssl_session_timeout 5m;
+         # 配置加密套件，写法遵循 openssl 标准
+         ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+         ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
+         ssl_prefer_server_ciphers on;
+         
+         location / {
+             # 反代地址
+             proxy_pass http://tomcats/;
+         }
+     }
+     ```
+
+     
 
 
 
