@@ -498,25 +498,67 @@ server{
 	</tr>
 </table>
 
+### 3、Redis的数据类型
+
+#### string
+
+string:最简单的字符串类型键值对缓存。
+
+**key相关**
+
+keys * : 查看所有的key(不建议在生产环境上使用，有性能影响)
+
+type key: key的类型
+
+**string类型**
+
+- get/set/del:查询/设置/删除
+- set key value: 设置key(已存在,则覆盖)
+- setnx key value: 设置key(已存在,不覆盖)
+- set key value ex time: 设置带过期时间的数据
+- expire key: 设置过期时间
+- ttl: 查看过期时间, -1-永不过期， -2已过期
+- append key: 追加字符串
+- strlen key:字符串长度
+- incr key: 数字值累加一
+- decr key:数字值累减一
+- incrby key num: 累加给定数值
+- decrby key num: 累减给定数值
+- getrange key start end: 截取数据, end=-1 代表最后
+- setrange key start newdata: 从start位置开始替换数据
+- mset: 连续设值
+- mget: 连续取值
+- msetnx: 连续设值不覆盖
 
 
 
+#### list
 
+list:列表,[a,b,c,d,...]
 
+- lpush userList 1 2 3 4 5：构建一个list，从左边开始存入数据
 
+- rpush userList 1 2 3 4 5：构建一个list，从右边开始存入数据
 
+- lrange list start end：获得数据
 
+- lpop：从左侧开始拿出一个数据
 
+- rpop：从右侧开始拿出一个数据
 
-​	
+- llen list：list长度
 
-​	 	
+- lindex list index：获取list下标的值
 
+- lset list index value：把某个下标的值替换
 
+- linsert list before/after value：插入一个新的值
 
+- lrem list num value：删除几个相同数据
 
+- ltrim list start end：截取值，替换原来的list
 
-
+  
 
 
 
