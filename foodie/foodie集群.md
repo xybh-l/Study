@@ -421,6 +421,87 @@ server{
 - 融合分布式中间件
 - 容错高可用
 
+### 3、分布式缓存
+
+- 提升读取速度性能(2-8原则)
+- 分布式计算领域
+- 为数据库降低查询压力
+- 跨服务器缓存
+- 内存式缓存
+
+## 六、Redis
+
+### 1、什么是Redis
+
+- NoSql数据库
+- 分布式缓存中间件
+- key-value存储
+- 提供海量数据存储访问
+- 数据存储在内存里,读取更快
+
+### 2、缓存方案对比
+
+<table>
+    <tr style="text-align:center; font-weight:bold;">
+        <td>缓存方案</td>
+    	<td>优点</td>
+    	<td>缺点</td>
+    </tr>
+	<tr>
+        <td>Ehcache</td>
+        <td>
+            <ol>
+                <li>基于Java开发</li>
+                <li>基于JVM缓存</li>
+                <li>简单、轻巧、方便</li>
+            </ol>
+        </td>
+        <td>
+            <ol>
+                <li>集群不支持(缓存不共享)</li>
+                <li>分布式不支持</li>
+            </ol>
+        </td>
+	</tr>
+	<tr>
+        <td>Memcache</td>
+        <td>
+            <ol>
+                <li>简单的key-value存储(单一String类型)</li>
+                <li>内存使用率比较高</li>
+                <li>多核处理,多线程</li>
+            </ol>
+        </td>
+        <td>
+            <ol>
+                <li>无法容灾</li>
+                <li>无法持久化</li>
+            </ol>
+        </td>
+	</tr>
+    <tr>
+        <td>Redis</td>
+        <td>
+            <ol>
+                <li>丰富的数据结构</li>
+                <li>持久化</li>
+                <li>主从同步、故障转移</li>
+                <li>内存数据库</li>
+            </ol>
+        </td>
+        <td>
+            <ol>
+                <li>单线程(6.0加入多线程)</li>
+                <li>单核</li>
+            </ol>
+        </td>
+	</tr>
+</table>
+
+
+
+
+
 
 
 
