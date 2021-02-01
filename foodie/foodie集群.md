@@ -196,6 +196,7 @@ server{
 ### 7、Nginx 跨域配置
 
 ```python
+location / { 			
 # 允许跨域请求的域, *代表所有
 add_header	'Access-Control-Allow-Origin' *;
 # 允许带上cookie请求
@@ -204,6 +205,7 @@ add_header 'Access-Control-Allow-Credentials' 'true';
 add_header 'Access-Control-Allow-Methods' *;
 # 允许请求的header
 add_header 'Access-Control-Allow-Headers' *;
+} 
 ```
 
 ### 8、Nginx 防盗链
@@ -234,6 +236,100 @@ server{
     }
 }
 ```
+
+负载均衡方式:
+
+<table style="text-align:center;">
+	<caption>负载均衡策略</caption>
+    <tr>
+        <td>轮询</td>
+        <td>默认方式</td>
+    </tr>
+    <tr>
+        <td>weight</td>
+        <td>权重方式</td>
+    </tr>
+    <tr>
+        <td>ip_hash</td>
+        <td>依据ip分配方式</td>
+    </tr>
+    <tr>
+        <td>least_conn</td>
+        <td>最少连接方式</td>
+    </tr>
+    <tr>
+        <td>fair</td>
+        <td>响应时间方式</td>
+    </tr>
+    <tr>
+        <td>url_hash</td>
+        <td>依据URL分配方式</td>
+    </tr>
+</table>
+
+#### 1、轮询
+
+　　最基本的配置方法，上面的例子就是轮询的方式，它是upstream模块默认的负载均衡默认策略。每个请求会按时间顺序逐一分配到不同的后端服务器。
+
+　　有如下参数：
+
+|     参数     |             说明             |
+| :----------: | :--------------------------: |
+| fail_timeout | 超时时间,与max_fails结合使用 |
+|  max_fails   |         最大失败次数         |
+|  fail_time   |           停机时间           |
+|    backup    |       标记为备用服务器       |
+|     down     |         标记为已停机         |
+
+　　**注意：**
+
+- 在轮询中，如果服务器down掉了，会自动剔除该服务器。
+- 缺省配置就是轮询策略。
+- 此策略适合服务器配置相当，无状态且短平快的服务使用。
+
+#### 2、weight
+
+权重方式，在轮询策略的基础上指定轮询的几率。例子如下：
+
+```
+    #动态服务器组
+    upstream dynamic_zuoyu {
+        server localhost:8080   weight=2;  #tomcat 7.0
+        server localhost:8081;  #tomcat 8.0
+        server localhost:8082   backup;  #tomcat 8.5
+        server localhost:8083   max_fails=3 fail_timeout=20s;  #tomcat 9.0
+    }
+```
+
+　　在该例子中，weight参数用于指定轮询几率，weight的默认值为1,；weight的数值与访问比率成正比，比如Tomcat 7.0被访问的几率为其他服务器的两倍。
+
+　　**注意：**
+
+- 权重越高分配到需要处理的请求越多。
+- 此策略可以与least_conn和ip_hash结合使用。
+- 此策略比较适合服务器的硬件配置差别比较大的情况。
+
+#### 3、ip_hash
+
+　　指定负载均衡器按照基于客户端IP的分配方式，这个方法确保了相同的客户端的请求一直发送到相同的服务器，以保证session会话。这样每个访客都固定访问一个后端服务器，可以解决session不能跨服务器的问题。
+
+```
+#动态服务器组
+    upstream dynamic_zuoyu {
+        ip_hash;    #保证每个访客固定访问一个后端服务器
+        server localhost:8080   weight=2;  #tomcat 7.0
+        server localhost:8081;  #tomcat 8.0
+        server localhost:8082;  #tomcat 8.5
+        server localhost:8083   max_fails=3 fail_timeout=20s;  #tomcat 9.0
+    }
+```
+
+　　**注意：**
+
+- 在nginx版本1.3.1之前，不能在ip_hash中使用权重（weight）。
+- ip_hash不能与backup同时使用。
+- 此策略适合有状态服务，比如session。
+- 当有服务器需要剔除，必须手动down掉。
 
 ### 10、配置SSL证书
 
@@ -301,7 +397,33 @@ server{
      }
      ```
 
-     
+## 五、分布式架构
+
+### 1、优缺点
+
+1. 优点：
+   - 业务解耦
+   - 系统模块化，可重用化
+   - 提升系统并发量
+   - 优化运维部署效率
+2. 缺点
+   - 架构复杂
+   - 部署多个子系统复杂
+   - 系统之间通信耗时
+   - 融入团队慢
+   - 调试复杂
+
+### 2、设计原则
+
+- 异步解耦
+- 幂等一致性
+- 拆分原则
+- 融合分布式中间件
+- 容错高可用
+
+
+
+
 
 
 
