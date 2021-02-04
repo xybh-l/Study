@@ -1,21 +1,21 @@
-[TOC]
+
 
 # foodie集群学习
 
 ## 一、什么是Nginx
 
-- **Nginx(engine x)**是一个高性能的HTTP和反向代理web服务器，同时也提供IMAP/POP3/SMTP服务。
+- **Nginx(engine x)** 是一个高性能的HTTP和反向代理web服务器，同时也提供IMAP/POP3/SMTP服务。
 - 主要功能：反向代理
 - 通过配置文件可以实现集群和负载均衡
 - 静态资源虚拟化
 
 ## 二、常见的服务器
 
-- MS IIS							asp.net
-- Weblogic、Jboss 		传统行业 ERP/物流/电信/金融
-- Tomcat、Jetty			  J2EE
-- Apache、Nginx			静态服务，反向代理
-- Netty							  高性能服务器编程			
+- MS IIS							 asp.net
+- Weblogic、Jboss 		   传统行业 ERP/物流/电信/金融
+- Tomcat、Jetty			    J2EE
+- Apache、Nginx			  静态服务，反向代理
+- Netty							   高性能服务器编程			
 
 
 
@@ -50,19 +50,19 @@
 
 ### 2.配置文件参数
 
-#### main
+#### 2.1 main
 
 - user : 工作进程所属用户
 - worker_processes:工作进程数量，通常为n-1
 - error_log: 保存日志 命令格式 error_log 日志文件名 (debug info notice warn error crit)
 - pid: Nginx 启动进程号
 
-#### events
+#### 2.2 events
 
 - use epoll; 默认使用epoll, worker进程工作模式
 - worker_connections 10240; 每个worker允许连接的客户端最大连接数
 
-#### http
+#### 2.3 http
 
 - include				 	导入外部文件
 - default_type 	   	文档默认类型
@@ -72,7 +72,7 @@
 - keeplive_timeout	保持连接
 - gzip							gzip压缩
 
-#### server
+#### 2.4 server
 
 - listen 						监听端口
 - server_name			域名
@@ -93,7 +93,7 @@
 
 ### 4、Nginx 日志
 
-#### 1. Nginx 日志切割(手动)
+#### 4.1 Nginx 日志切割(手动)
 
 cut_my_log.sh
 
@@ -110,7 +110,7 @@ kill -USR1 `cat $PID`
 
 
 
-#### 2. Nginx 日志切割(自动)
+#### 4.2 Nginx 日志切割(自动)
 
 1. 安装定时任务
 
@@ -267,7 +267,7 @@ server{
     </tr>
 </table>
 
-#### 1、轮询
+#### 9.1 轮询
 
 　　最基本的配置方法，上面的例子就是轮询的方式，它是upstream模块默认的负载均衡默认策略。每个请求会按时间顺序逐一分配到不同的后端服务器。
 
@@ -287,7 +287,7 @@ server{
 - 缺省配置就是轮询策略。
 - 此策略适合服务器配置相当，无状态且短平快的服务使用。
 
-#### 2、weight
+#### 9.2 weight
 
 权重方式，在轮询策略的基础上指定轮询的几率。例子如下：
 
@@ -309,7 +309,7 @@ server{
 - 此策略可以与least_conn和ip_hash结合使用。
 - 此策略比较适合服务器的硬件配置差别比较大的情况。
 
-#### 3、ip_hash
+#### 9.3 ip_hash
 
 　　指定负载均衡器按照基于客户端IP的分配方式，这个方法确保了相同的客户端的请求一直发送到相同的服务器，以保证session会话。这样每个访客都固定访问一个后端服务器，可以解决session不能跨服务器的问题。
 
@@ -500,7 +500,7 @@ server{
 
 ### 3、Redis的数据类型
 
-#### string
+#### 3.1 string
 
 string:最简单的字符串类型键值对缓存。
 
@@ -532,7 +532,7 @@ type key: key的类型
 
 
 
-#### list
+#### 3.2 list
 
 list:列表,[a,b,c,d,...]
 
@@ -550,11 +550,85 @@ list:列表,[a,b,c,d,...]
 
 ### 4、Redis线程模型
 
-![Redis的线程模型](http://image.xybh.online/image-20210201154110193.png)
+<img src="http://image.xybh.online/image-20210201154110193.png" alt="Redis的线程模型" style="zoom: 33%;" />
+
+请求过程:
+
+> Redis-cli发送`Readable/Writable`事件,使用Socket与Redis-server通信,Redis-server使用多路复用器(同步非阻塞)将事件发送到文件事件分配器，文件事件分配器根据请求类型转发至`连接应答处理器/命令请求处理器/命令应答处理器`。
+
+<img src="http://image.xybh.online/Redis%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B" alt="img" style="zoom: 33%;" />
+
+### 5、发布与订阅
+
+<img src="http://image.xybh.online/Redis%E5%8F%91%E5%B8%83%E4%B8%8E%E8%AE%A2%E9%98%85.png" alt="image-20210203124116805" style="zoom: 50%;" />
+
+#### 5.1 发布
+
+#### 5.2 订阅
+
+### 6、Redis读写分离(主从架构)
+
+#### 6.1 主从架构
+
+> Redis主从架构: master节点做到一个分发命令的功能，主节点将数据复制给从库节点。（水平扩展，通过增加服务器来提高性能）
+
+<img src="http://image.xybh.online/Redis%E4%B8%BB%E4%BB%8E%E6%9E%B6%E6%9E%84.png" alt="image-20210203184604139" style="zoom: 50%;" />
+
+#### 6.2 主从原理
+
+>1. 从Redis第一次连接主Redis,使用全量复制
+>
+>   - 从服务器连接主服务器，发送SYNC命令； 
+>   - 主服务器接收到SYNC命名后，开始执行BGSAVE命令生成RDB文件并使用缓冲区记录此后执行的所有写命令； 
+>   - 服务器BGSAVE执行完后，向所有从服务器发送快照文件，并在发送期间继续记录被执行的写命令；
+>   - 从服务器收到快照文件后丢弃所有旧数据，载入收到的快照； 
+>   - 主服务器快照发送完毕后开始向从服务器发送缓冲区中的写命令； 
+>   - 从服务器完成对快照的载入，开始接收命令请求，并执行来自主服务器缓冲区的写命令；
+>
+>2. 增量同步
+>   Redis增量复制是指Slave初始化后开始正常工作时主服务器发生的写操作同步到从服务器的过程。 
+>   增量复制的过程主要是主服务器每执行一个写命令就会向从服务器发送相同的写命令，从服务器接收并执行收到的写命令。
+>
+>   
+>
+>   **Redis主从同步策略**
+>   主从刚刚连接的时候，进行全量同步；全同步结束后，进行增量同步。当然，如果有需要，slave 在任何时候都可以发起全量同步。redis的策略是，无论如何，首先会尝试进行增量同步，如不成功，要求从机进行全量同步。(Master必须要开启持久化)
+
+<img src="http://image.xybh.online/Redis%E4%B8%BB%E4%BB%8E%E5%8E%9F%E7%90%86.png" style="zoom: 50%;" />
+
+#### 6.3 主从模式
+
+> 一般采用一主二从，一主多从比较少,因为主从同步需要占用带宽，较多从节点可能会占用较多带宽。
+
+<img src="http://image.xybh.online/Redis%E4%B8%BB%E4%BB%8E%E6%A8%A1%E5%BC%8F.png" alt="image-20210203191422796" style="zoom: 50%;" />
+
+### 7、Redis缓存过期机制
+
+1. (主动)定期删除
+   - 定时随机的检查过期的key,如果过期则清理删除。（每秒检查次数在redis.conf中的hz配置)
+2. (被动)惰性删除
+   - 当客户端请求一个已经过期的key的时候,那么redis会检查这个可以是否过期,如果过期了,则删除,然后返回一个nil。
+
+**如果内存被Redis缓存占用满了怎么办？**
+
+> ​	当内存占用满了后,redis提供了一套缓存淘汰机制:MEMORY MANAGEMENT
+>
+> - noevivcation:旧缓存永不过期，新缓存设置不了，直接返回错误
+> - allkeys-lru:清除所有键中最少使用的旧缓存，然后保存新缓存（推荐使用）
+> - allkeys-random:在所有缓存中随机删除（不推荐）
+> - volatile-lru:在设置了过期时间的缓存中,清除最少用的旧缓存，然后保存新的缓存
+> - volatile-random:在设置了过期时间的缓存中,随机删除缓存
+> - volatile-ttl:在设置了过期时间的缓存中,删除即将过期的缓存
 
 
 
+### 8、Redis哨兵模式
 
+<img src="http://image.xybh.online/Redis%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8F.png" alt="image-20210204140051369" style="zoom: 50%;" />
+
+1. 配置sentinel.conf(默认端口 26379)
+2. sentinel monitor master_name ip_address port quorum(quorum 哨兵检测数量)
+3. sentinel auth-pass master_name password
 
 ## 七、工具类
 
