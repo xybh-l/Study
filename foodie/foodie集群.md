@@ -1,6 +1,4 @@
-
-
-# foodie集群学习
+foodie集群学习
 
 ## 一、什么是Nginx
 
@@ -548,6 +546,68 @@ list:列表,[a,b,c,d,...]
 - lrem list num value：删除几个相同数据
 - ltrim list start end：截取值，替换原来的list
 
+#### 3.3 hash
+
+hash：类似map，存储结构化数据结构，比如存储一个对象（不能有嵌套对象）
+
+- hset key property value：
+  -> hset user name xybh
+  -> 创建一个user对象，这个对象中包含name属性，name值为xybh
+- hget user name：获得用户对象中name的值
+- hmset：设置对象中的多个键值对
+  -> hset user age 18 phone 139123123
+- hmsetnx：设置对象中的多个键值对，存在则不添加
+  -> hset user age 18 phone 139123123
+- hmget：获得对象中的多个属性
+  -> hmget user age phone
+- hgetall user：获得整个对象的内容
+- hincrby user age 2：累加属性
+- hincrbyfloat user age 2.2：累加属性
+- hlen user：有多少个属性
+- hexists user age：判断属性是否存在
+- hkeys user：获得所有属性
+- hvals user：获得所有值
+- hdel user：删除对象
+
+#### 3.4 set
+
+set 是 String 类型的无序集合。集合成员是唯一的，这就意味着集合中不能出现重复的数据。
+
+- sadd: 增加新元素
+- sismember: 判断元素是否在set中
+- sinter: 查看多个set的交集
+- spop: 随机删除一个或多个元素并返回
+- srandmember:随机获取一个元素
+- scard: 获取set的成员数
+- key: 返回集合中的所有成员
+
+#### 3.5 zset
+
+sorted set：排序的set，可以去重可以排序，比如可以根据用户积分做排名，积分作为set的一个数值，根据数值可以做排序。
+
+
+- zadd zset 10 value1 20 value2 30 value3：设置member和对应的分数
+- zrange zset 0 -1：查看所有zset中的内容
+- zrange zset 0 -1 withscores：带有分数
+- zrank zset value：获得对应的下标
+- zscore zset value：获得对应的分数
+- zcard zset：统计个数
+- zcount zset 分数1 分数2：统计个数
+- zrangebyscore zset 分数1 分数2：查询分数之间的member(包含分数1 分数2)
+- zrangebyscore zset (分数1 (分数2：查询分数之间的member（不包含分数1 和 分数2）
+- zrangebyscore zset 分数1 分数2 limit start end：查询分数之间的member(包含分数1 分数2)，获得的结果集再次根据下标区间做查询
+- zrem zset value：删除member
+
+> redis sorted sets里面当items内容大于64的时候同时使用了hash和skiplist两种设计实现。这也会为了排序和查找性能做的优化。所以如上可知： 
+>
+> 添加和删除都需要修改skiplist，所以复杂度为O(log(n))。 
+>
+> 但是如果仅仅是查找元素的话可以直接使用hash，其复杂度为O(1) 
+>
+> 其他的range操作复杂度一般为O(log(n))
+>
+> 当然如果是小于64的时候，因为是采用了ziplist的设计，其时间复杂度为O(n)
+
 ### 4、Redis线程模型
 
 <img src="http://image.xybh.online/image-20210201154110193.png" alt="Redis的线程模型" style="zoom: 33%;" />
@@ -564,7 +624,17 @@ list:列表,[a,b,c,d,...]
 
 #### 5.1 发布
 
+publish channel messgae: 将消息发送到指定的频道。
+
 #### 5.2 订阅
+
+psubscribe pattern 订阅一个获多个符合给定模式的频道
+
+pubsub subcommand  查看订阅和发布系统状态
+
+subscribe channel  订阅给定的一个或多个频道的信息
+
+unsubscibe channel 退订给定的频道
 
 ### 6、Redis读写分离(主从架构)
 
@@ -629,6 +699,40 @@ list:列表,[a,b,c,d,...]
 1. 配置sentinel.conf(默认端口 26379)
 2. sentinel monitor master_name ip_address port quorum(quorum 哨兵检测数量)
 3. sentinel auth-pass master_name password
+
+### 9、Redis异常
+
+#### 9.1 缓存穿透
+
+缓存穿透是指缓存和数据库中都没有的数据，而用户不断发起请求，如发起为id为“-1”的数据或id为特别大不存在的数据。这时的用户很可能是攻击者，攻击会导致数据库压力过大。
+
+解决方案：
+
+1. 接口层增加校验,异常请求直接拦截
+2. 在缓存和数据库都取不到数据的情况下，可以增加key-null的短期缓存(如30秒,5分钟)
+3. 设置布隆过滤器(存在误判率,返回无数据必为无数据,有数据不一定有数据)
+
+#### 9.2 缓存雪崩
+
+ 缓存雪崩是指缓存中数据大批量到过期时间，而查询数据量巨大，引起数据库压力过大甚至宕机。和缓存击穿不同的是，缓存击穿指并发查同一条数据，缓存雪崩是不同数据都过期了，很多数据都查不到从而查数据库。
+
+解决方案:
+
+1. 设置不同的过期时间
+2. 设置热点信息永不过期
+3. 多缓存结合
+4. 使用分布式Redis,热点信息存储在不同的Redis中
+
+#### 9.3 缓存击穿
+
+缓存击穿是指缓存中没有但数据库中有的数据（一般是缓存时间到期），这时由于并发用户特别多，同时读缓存没读到数据，又同时去数据库去取数据，引起数据库压力瞬间增大，造成过大压力
+
+解决方案:
+
+1. 设置热点信息永不过期
+2. 加互斥锁
+
+
 
 ## 七、工具类
 
