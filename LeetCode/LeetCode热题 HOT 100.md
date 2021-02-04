@@ -156,7 +156,7 @@ class Solution {
 }
 ```
 
-## 5、盛最多水的容器(中等)
+## 6、盛最多水的容器(中等)
 
 ```java
 class Solution {
@@ -177,7 +177,7 @@ class Solution {
 }
 ```
 
-6、三数之和（中等）
+## 7、三数之和（中等）
 
 ```java
 class Solution {
