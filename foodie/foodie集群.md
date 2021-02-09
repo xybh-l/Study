@@ -734,7 +734,48 @@ unsubscibe channel 退订给定的频道
 
 
 
-## 七、工具类
+## 七、单点登录SSO
+
+单点登录又称为Single Sign On,简称SSO,单点登录可以通过基于用户会话的共享，分为两种：
+
+#### 1、Cookie+Redis实现SSO:
+
+相同顶级域名的单点登录：
+
+- 原理：主要依靠cookie和网站的依赖关系，顶级域名`www.xybh.online`和`*.xybh.online`的cookie值是可以共享的,可以被携带到后档的,比如设置为`.xybh.online`,`.z.xybh.online`.
+- 二级域名自己的独立cookie不能被共享,不能被其他二级域名获取
+
+#### 2、CAS
+
+```mermaid
+sequenceDiagram
+title:SSO系统验证时序图
+	客户端 ->> MTV系统:1.初次访问
+	MTV系统 ->> MTV系统: 2.验证是否登录
+	MTV系统 ->> CAS系统: 3.携带returnUrl跳转至CAS
+	CAS系统 ->> CAS系统: 4.验证未登录
+	CAS系统 -->> 客户端: 5.显示CAS登录页面
+	客户端 ->> CAS系统: 6.用户密码登录
+	CAS系统 ->> CAS系统: 7.登录成功
+	CAS系统 ->> CAS系统: 8.创建用户会话
+	CAS系统 ->> CAS系统: 9.创建用户全局门票
+	CAS系统 ->> CAS系统: 10.创建临时票据
+	CAS系统 -->> MTV系统: 11.回跳并携带临时票据
+	MTV系统 ->> CAS系统: 12.校验临时票据
+	CAS系统 ->> CAS系统: 13.校验并成功
+	CAS系统 -->> MTV系统: 14.用户会话回传
+	MTV系统 ->> MTV系统: 15.保存用户会话
+	MTV系统 -->> 客户端: 16.显示登陆成功
+	
+	
+	
+```
+
+
+
+
+
+## 八、工具类
 
 ### RedisOperator.java
 
@@ -929,3 +970,11 @@ public class RedisOperator {
 }
 ```
 
+## 九、Elasticsearch(ES)
+
+### 1.ES核心术语
+
+- 索引 index				表
+- 类型 type                表逻辑类型
+- 文档 document            行
+- 字段 fields              列
