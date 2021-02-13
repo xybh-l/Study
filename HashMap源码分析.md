@@ -1,4 +1,10 @@
-![image-20210212212659622](深入理解Java虚拟机/自动内存管理/upload/image-20210212212659622.png)
+  最近看了遍HashMap的源码,打算写一篇HashMap的源码解析,主要针对HashMap的增删改查操作进行分析，接下来直接进入正题。
+
+  先看看hashMap在jdk1.8的结构，用的是数组+链表+红黑树的结构，也叫哈希桶，在jdk1.8之前都是数组+链表的结构，因为在链表的查询操作是O(N)的时间复杂度，而且hashMap中查询操作也是占了很大比例的，如果当节点数量多，转换为红黑树结构，那么将会提高很大的效率，因为红黑树结构中，增删改查都是O(log n)。
+
+  哈希桶就是数组里面的一个位置中所占所有数据
+
+<img src="http://image.xybh.online/HashMap%E7%BB%93%E6%9E%84.png" alt="HashMap结构" style="zoom: 67%;" />
 
 ## HashMap的属性
 
@@ -72,7 +78,7 @@ final float loadFactor;
 
    **HashMap负载因子为0.75是空间和时间成本的一种折中。**
 
-2. **易混点：**大家都知道HashMap底层是数组+链表/红黑树，并且当链表长度大于默认值为8时会将链表转化成红黑树。但是实际上还有另外一个参数*MIN_TREEIFY_CAPACITY*,只有当HashMap里的元素数量大于MIN_TREEIFY_CAPACITY时才会将链表转化成红黑树，这是为了避免在哈希表建立初期，多个键值对恰好被放入了同一个链表中而导致不必要的转化。
+2. **易混点：**大家都知道HashMap底层是数组+链表/红黑树，并且当链表长度大于默认值为8时会将链表转化成红黑树。但是实际上还有另外一个参数*MIN_TREEIFY_CAPACITY*,只有当HashMap里的元素数量大于MIN_TREEIFY_CAPACITY(默认为64)时才会将链表转化成红黑树，这是为了避免在哈希表建立初期，多个键值对恰好被放入了同一个链表中而导致不必要的转化。
 
 ## HashMap的构造函数
 
@@ -153,6 +159,8 @@ final void putMapEntries(Map<? extends K, ? extends V> m, boolean evict) {
 ```
 
 ## HashMap常用函数
+
+### 1.put()/putVal()添加元素
 
 HashMap的构造函数我们学习完了,接下来必不可少的就是HashMap的增删改查操作和一些重要的方法了。
 
@@ -241,7 +249,31 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
 }
 ```
 
-这里涉及到resize()函数对HashMap的容量进行动态扩容
+上面就是HashMap的一个添加元素的过程，其中涉及到了多次的resize()扩容方法，这是HashMap中的一个重难点。
+
+接下来用文字和流程图来总结一下HashMap的添加元素过程
+
+1. 判断键值对数组table是否为null或者元素为空，是则将使用resize()方法对table进行初次初始化扩容
+
+2. 使用(n-1)&hash计算索引i来记录元素应该存放在数组的位置，判断是否table[i]==null来判断是否存在hash冲突，不存在则直接将元素存入数组，转向8
+
+3. 判断table[i]是否与需要插入的元素hash值相等，元素相同，如果相同直接覆盖value，后者转向4
+
+4. 判断table[i]是否为TreeNode,即判断table[i]是否为红黑树，是则使用putTreeVal()方法直接放入树中，转向；否则转向5
+
+5. 如果当前table[i]不为红黑树,则当前结点为链表，遍历当前链表，判断是否有存在相同元素，如存在则记录当前结点，并跳出循环转向7，否则在链表末端插入元素
+
+6. 判断插入后的链表长度是否大于树化阈值（默认为8），大于的话则使用treeifyBin()树化链表，转向8
+
+7. 将记录下来的结点的值进行覆盖
+
+8. 插入成功后，判断实际存在的键值对数量size是否超多了最大容量threshold，如果超过，进行扩容
+
+   <img src="http://image.xybh.online/HashMap%E6%8F%92%E5%85%A5%E7%BB%93%E7%82%B9.png" alt="HashMap插入结点" style="zoom: 25%;" />
+
+### 2.resize()扩容函数
+
+在添加元素的过程中多次涉及到了resize()函数对HashMap的容量进行动态扩容,接下来我们就接着看源码来分析一下resize()函数
 
 ```java
 final Node<K,V>[] resize() {
@@ -347,16 +379,185 @@ final Node<K,V>[] resize() {
 }
 ```
 
-上面就是HashMap的一个添加元素的过程，其中涉及到了多次的resize()扩容方法，这是HashMap中的一个重难点。
+### 3.remove()删除函数
 
-接下来用文字和流程图来总结一下HashMap的添加元素过程
+讲完了增删改查中的增，接下来我们接着看删这个步骤，同样的在删的这个步骤中也没有直接在remove函数中完成详细的删除细节，而是在removeNode中具体实现
 
-1. 判断键值对数组table是否为null或者元素为空，是则将使用resize()方法对table进行初次初始化扩容
-2. 使用(n-1)&hash计算索引i来记录元素应该存放在数组的位置，判断是否table[i]==null来判断是否存在hash冲突，不存在则直接将元素存入数组，转向8
-3. 判断table[i]是否与需要插入的元素hash值相等，元素相同，如果相同直接覆盖value，后者转向4
-4. 判断table[i]是否为TreeNode,即判断table[i]是否为红黑树，是则使用putTreeVal()方法直接放入树中，转向；否则转向5
-5. 如果当前table[i]不为红黑树,则当前结点为链表，遍历当前链表，判断是否有存在相同元素，如存在则记录当前结点，并跳出循环转向7，否则在链表末端插入元素
-6. 判断插入后的链表长度是否大于树化阈值（默认为8），大于的话则使用treeifyBin()树化链表，转向8
-7. 将记录下来的结点的值进行覆盖
-8. 插入成功后，判断实际存在的键值对数量size是否超多了最大容量threshold，如果超过，进行扩容
+```java
+public V remove(Object key) {
+    Node<K,V> e;
+    // 判断key是否存在，存在的话返回value否则返回null
+    return (e = removeNode(hash(key), key, null, false, true)) == null ?
+        null : e.value;
+}
+
+final Node<K,V> removeNode(int hash, Object key, Object value,
+                           boolean matchValue, boolean movable) {
+    Node<K,V>[] tab; Node<K,V> p; int n, index;
+    // 判断table不为空，table的长度大于0，然后获取删除key的结点所在数组的下标的值
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (p = tab[index = (n - 1) & hash]) != null) {
+        Node<K,V> node = null, e; K k; V v;
+        // 判断当前桶的第一个元素是否就是需要查找的元素
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            node = p;
+        else if ((e = p.next) != null) {
+            // 判断当前桶是否为红黑树结构
+            if (p instanceof TreeNode)
+                // 获取树中结点
+                node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
+            else {
+                // 遍历链表, 获取结点
+                do {
+                    if (e.hash == hash &&
+                        ((k = e.key) == key ||
+                         (key != null && key.equals(k)))) {
+                        node = e;
+                        break;
+                    }
+                    p = e;
+                } while ((e = e.next) != null);
+            }
+        }
+        //找到要删除的节点后，判断!matchValue，我们正常的remove删除，!matchValue都为true
+        if (node != null && (!matchValue || (v = node.value) == value ||
+                             (value != null && value.equals(v)))) {
+            // 如果是红黑树结点,调用removeTreeNode删除树中结点
+            if (node instanceof TreeNode)
+                ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
+            // 如果是桶的第一个结点,直接删除头结点
+            else if (node == p)
+                tab[index] = node.next;
+            // 不为头结点,将next指针指向下一个元素
+            else
+                p.next = node.next;
+            // 修改次数加一
+            ++modCount;
+            // HashMap中元素数量减一
+            --size;
+            // 回调函数
+            afterNodeRemoval(node);
+            // 返回结点
+            return node;
+        }
+    }
+    // 如果没有查找到结点,返回null
+    return null;
+}
+```
+
+ 删除还有clear方法，把所有的数组下标元素都置位null。
+
+```java
+public void clear() {
+    Node<K,V>[] tab;
+    modCount++;
+    if ((tab = table) != null && size > 0) {
+        size = 0;
+        for (int i = 0; i < tab.length; ++i)
+            tab[i] = null;
+    }
+}
+```
+
+### 4.get()获取元素函数
+
+相比于增加元素和删除元素来讲，查找元素的过程就很简单了，通过比对hash值先判断元素是否存在，在根据桶类型来获取元素。
+
+```java
+public V get(Object key) {
+    Node<K,V> e;
+    //也是调用getNode方法来完成的
+    return (e = getNode(hash(key), key)) == null ? null : e.value;
+}
+
+final Node<K,V> getNode(int hash, Object key) {
+    //first 头结点，e 临时变量，n 长度,k key
+    Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
+    //头结点也就是数组下标的节点
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (first = tab[(n - 1) & hash]) != null) {
+        //如果是头结点，则直接返回头结点
+        if (first.hash == hash && 
+            ((k = first.key) == key || (key != null && key.equals(k))))
+            return first;
+        //不是头结点
+        if ((e = first.next) != null) {
+            //判断是否是红黑树结构
+            if (first instanceof TreeNode)
+                //去红黑树中找，然后返回
+                return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+            do { //链表节点，一样遍历链表，找到该节点并返回
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    return e;
+            } while ((e = e.next) != null);
+        }
+    }
+    //找不到，表示不存在该节点
+    return null;
+}
+```
+
+### 5.replace()/replaceAll()修改元素函数
+
+为什么先说获取元素而不是修改元素呢，其实通过我们分析增加元素的源码时我们就已经发现使用put()可以添加相同的元素，存在相同的元素就会直接覆盖value，这其实就达到了覆盖的目的，我在这稍微提一嘴，虽然可以通过put来覆盖数据，但其实HashMap的源码中其实是有replace()和replaceAll()替换函数的，这里给大家简单分析一下。
+
+```java
+/**
+ * 使用newValue来替换key中的oldValue
+ * @return 是否替换成功
+ */
+@Override
+public boolean replace(K key, V oldValue, V newValue) {
+    Node<K,V> e; V v;
+    // 判断key是否存在, 用e获取到key所在的结点，直接替换结点
+    if ((e = getNode(hash(key), key)) != null &&
+        ((v = e.value) == oldValue || (v != null && v.equals(oldValue)))) {
+        e.value = newValue;
+        afterNodeAccess(e);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * 使用value来替换key中的value
+ * @return key中原来的值
+ */
+@Override
+public V replace(K key, V value) {
+    Node<K,V> e;
+    // 判断key是否存在, 用e获取到key所在的结点
+    if ((e = getNode(hash(key), key)) != null) {
+        // 保存原值
+        V oldValue = e.value;
+        e.value = value;
+        afterNodeAccess(e);
+        // 返回原值
+        return oldValue;
+    }
+    return null;
+}
+
+@Override
+public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+    Node<K,V>[] tab;
+    if (function == null)
+        throw new NullPointerException();
+    if (size > 0 && (tab = table) != null) {
+        int mc = modCount;
+        for (int i = 0; i < tab.length; ++i) {
+            for (Node<K,V> e = tab[i]; e != null; e = e.next) {
+                e.value = function.apply(e.key, e.value);
+            }
+        }
+        if (modCount != mc)
+            throw new ConcurrentModificationException();
+    }
+}
+```
+
+HashMap的源码分析暂时到这里，主要的增删改查操作都已经分析完了，因个人能力有限，如果里面内容存在错误，欢迎批评指正。后续会添加一些关于HashMap的面试题，欢迎大家关注。
 
