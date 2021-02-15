@@ -35,6 +35,49 @@ class Solution {
 }
 ```
 
+### Trie(字典树)模板
+
+```java
+public class Trie {
+    class Node{
+        Node[] next = new Node[26];
+        boolean isWord = false;
+    }
+    public Trie(){
+        root = new Node();
+    }
+    private Node root;
+    public void insert(String word){//插入单词
+        Node curNode = root;
+        for(int i=0;i<word.length();++i){
+            if(curNode.next[word.charAt(i)-'a'] == null) curNode.next[word.charAt(i)-'a'] = new Node();
+            curNode = curNode.next[word.charAt(i)-'a'];
+        }
+        curNode.isWord = true;
+    }
+
+    public boolean search(String word){//查找单词
+        Node curNode = root;
+        for(int i=0; i< word.length(); i++){
+            if(curNode.next[word.charAt(i) - 'a'] == null)return false;
+            curNode = curNode.next[word.charAt(i) - 'a'];
+        }
+        return curNode.isWord;
+    }
+    
+    public boolean startsWith(String prefix){//查找前缀
+        Node curNode = root;
+        for(int i = 0; i< prefix.length(); i++){
+            if(curNode.next[prefix.charAt(i) - 'a'] == null)return false;
+            curNode = curNode.next[prefix.charAt(i) - 'a'];
+        }
+        return true;
+    }
+}
+```
+
+
+
 ### No.5 最长回文子串
 
 ```java
