@@ -648,3 +648,22 @@ public class Solution {
 }
 ```
 
+## 29.连续子数组的最大和
+
+```java
+public class Solution {
+    public int FindGreatestSumOfSubArray(int[] array) {
+        if(array == null || array.length == 0) return 0;
+        int[] dp = new int[array.length];
+        dp[0] = array[0];
+        int max = Integer.MIN_VALUE;
+        for(int i = 1; i < array.length; i++){
+            if(dp[i-1] < 0) dp[i] = array[i];
+            else dp[i] = array[i] + dp[i-1];
+            max = Math.max(dp[i], max);
+        }
+        return max;
+    }
+}
+```
+
