@@ -648,7 +648,7 @@ public class Solution {
 }
 ```
 
-## 29.连续子数组的最大和
+## 30.连续子数组的最大和
 
 ```java
 public class Solution {
@@ -663,6 +663,50 @@ public class Solution {
             max = Math.max(dp[i], max);
         }
         return max;
+    }
+}
+```
+
+## 33.丑数
+
+```java
+public class Solution {
+    public int GetUglyNumber_Solution(int index) {
+        if(index <= 0)return 0;
+        int p2=0,p3=0,p5=0;//初始化三个指向三个潜在成为最小丑数的位置
+        int[] result = new int[index];
+        result[0] = 1;//
+        for(int i=1; i < index; i++){
+            result[i] = Math.min(result[p2]*2, Math.min(result[p3]*3, result[p5]*5));
+            if(result[i] == result[p2]*2)p2++;//为了防止重复需要三个if都能够走到
+            if(result[i] == result[p3]*3)p3++;//为了防止重复需要三个if都能够走到
+            if(result[i] == result[p5]*5)p5++;//为了防止重复需要三个if都能够走到
+
+
+        }
+        return result[index-1];
+    }
+}
+```
+
+## 34.第一次只出现一次的字符
+
+题目链接:[本题链接](https://www.nowcoder.com/practice/1c82e8cf713b4bbeb2a5b31cf5b0417c?tpId=13&tqId=11187&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking&tab=answerKey)
+
+```java
+// hash存储
+public class Solution {
+    public int FirstNotRepeatingChar(String str) {
+        int[] count = new int[256];
+        for(int i = 0; i < str.length(); i++){
+            count[str.charAt(i)]++;
+        }
+        for(int i = 0; i < str.length(); i++){
+            if(count[str.charAt(i)] == 1){
+                return i;
+            }
+        }
+        return -1;
     }
 }
 ```
