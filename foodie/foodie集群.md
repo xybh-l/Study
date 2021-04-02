@@ -1005,3 +1005,133 @@ public class RedisOperator {
 - 结点 node              每一个服务器
 - shard replica          数据分片与备份 
 
+### 6.安装与部署
+
+#### 6.1 不能以root用户身份启动
+
+> 1. 在系统中创建新的组 
+>
+>    groupadd es
+>
+> 2. 创建新的用户并将es用户放入es组中
+>
+> 3. 改变文件所有者
+>
+>    chown -R es:es 当前es的安装目录
+
+#### 6.2 开启ES远程访问
+
+>vim elasticsearch.yml
+>
+>network.host: 0.0.0.0
+
+#### 6.3 运行ES时常见问题
+
+1. 重新启动es出现如下错误
+
+**ERROR: bootstrap checks failed[1]: max file descriptors [4096] for elasticsearch process is too low, increase to at least [65536]**
+
+解决方案:
+
+>a.切换到root用户修改
+>
+>    vim /etc/security/limits.conf
+>
+>b.在最后面追加下面内容
+>
+>```bash
+>*               soft    nofile          65536
+>*               hard    nofile          65536
+>*               soft    nproc           4096
+>*               hard    nproc           4096
+>```
+>
+>c.退出重新登录检测配置是否生效:
+>
+>```bash
+>ulimit -Hn
+>ulimit -Sn
+>ulimit -Hu
+>ulimit -Su
+>```
+>
+
+2. 重新启动出现如下错误
+
+**ERROR: max number of threads [3802] for user [chenyn] is too low,increase to at least [4096]**
+解决方案:
+
+> 进入limits.d目录下修改配置文件。
+>     vim /etc/security/limits.d/20-nproc.conf 
+
+3.重新启动出现如下错误
+**ERROR: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]**
+解决方案:
+
+> vim /etc/sysctl.conf
+> vm.max_map_count=655360
+> #执行以下命令生效：
+> sysctl -p
+
+### 6.4 开启es跨域访问
+
+```yml
+vim elasticsearch.yml
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+```
+
+## 7.es常用API接口
+
+### 7.1 查看健康状态
+
+> GET _cluster/health
+
+### 7.2 查看索引状态
+
+> GET _search
+
+### 7.3 删除索引
+
+> DELETE indexName
+
+### 7.4 添加索引
+
+> PUT indexName
+>
+> {"setting":{"index":{"number_of_shards":"2","number_of_eplicas":"1"}}}
+
+### 7.5 查看索引分词
+
+> POST indexName/_analyze
+>
+> {"field":"realname","text":"imooc is very good~!"}
+
+### 7.6 增加属性类型
+
+> POST indexName/mapping
+>
+> {
+> 	"properties": {
+> 		"id": {
+> 			"type": "long",
+> 			"index": true
+> 		},
+> 		"age": {
+> 			"type": "integer"
+> 		}
+> 	}
+> }
+
+**某个属性一旦被建立,就不能修改了,但是可以新增额外属性**
+
+## 8.es主要数据类型
+
+- text,keyword,~~string~~
+- long,integer,short,byte
+- double,float
+- boolean
+- date
+- object
+- 数组不能混,类型一致
+
