@@ -1125,6 +1125,16 @@ http.cors.allow-origin: "*"
 
 **某个属性一旦被建立,就不能修改了,但是可以新增额外属性**
 
+### 7.7 查询文档数据
+
+> GET IndexName/_doc/id
+>
+> 例: my_doc/\_doc/1
+>
+> 查询所有:
+>
+> GET IndexName/\_doc/\_search
+
 ## 8.es主要数据类型
 
 - text,keyword,~~string~~
